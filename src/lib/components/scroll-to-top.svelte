@@ -14,7 +14,7 @@
       on:click={scrollToTop}
       in:fade={{ duration: 300 }}
       out:fade={{ duration: 300 }}
-      class="fixed bottom-20 right-4 bg-blue-500 text-white p-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-700"
+      class="fixed bottom-20 right-4 bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-700"
     >
       <ArrowUp size={24} />
       <span class="sr-only">Scroll to top</span>

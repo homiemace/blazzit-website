@@ -8,6 +8,8 @@ export const polls = writable<Poll[]>([
 
 export const feedItems = writable<FeedItem[]>([]);
 
+export const page = writable<string>('home');
+
 export const trendingTopics = writable([
   'Digital Art',
   'Web Development',
