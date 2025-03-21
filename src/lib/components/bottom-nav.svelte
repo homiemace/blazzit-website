@@ -1,45 +1,66 @@
 <script lang="ts">
-	import { House, GameController, Users, User } from 'phosphor-svelte';
-	import { navigation, type Page } from '../stores/navigation';
-
+	import House from 'phosphor-svelte/lib/House';
+	import GameController from 'phosphor-svelte/lib/GameController';
+	import Users from 'phosphor-svelte/lib/Users';
+	import User from 'phosphor-svelte/lib/User';
+	import { writable } from 'svelte/store';
+  
 	const navItems = [
-		{ icon: House, label: 'Home', value: 'home' },
-		{ icon: GameController, label: 'Games', value: 'games' },
-		{ icon: Users, label: 'Friends', value: 'friends' },
-		{ icon: User, label: 'Account', value: 'account' }
+	  { icon: House, value: 'home' },
+	  { icon: GameController, value: 'games' },
+	  { icon: Users, value: 'friends' },
+	  { icon: User, value: 'account' }
 	] as const;
-
-	function handleNavigation(value: Page) {
-		navigation.navigateTo(value);
+  
+	type Page = (typeof navItems)[number]['value'];
+  
+	const currentPage = writable<Page>('home');
+  
+	function handleNavigation(value: Page): void {
+	  currentPage.set(value);
 	}
-</script>
-
-<nav class="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white">
-	<div class="mx-auto max-w-4xl px-4 py-2">
-		<div class="flex items-center justify-between">
-			{#each navItems as item}
-				<button
-					class="group relative flex flex-col items-center p-2"
-					class:text-red-500={$navigation.currentPage === item.value}
-					class:text-gray-600={$navigation.currentPage !== item.value}
-					on:click={() => handleNavigation(item.value as Page)}
-					aria-label={item.label}
-				>
-					<div class="transform transition-transform group-hover:scale-110">
-						<svelte:component
-							this={item.icon}
-							size={24}
-							weight={$navigation.currentPage === item.value ? 'fill' : 'regular'}
-						/>
-					</div>
-					<span class="mt-1 text-xs font-medium">{item.label}</span>
-					{#if $navigation.currentPage === item.value}
-						<div
-							class="absolute -top-1 left-1/2 h-1 w-1 -translate-x-1/2 transform rounded-full bg-red-500"
-						></div>
-					{/if}
-				</button>
-			{/each}
-		</div>
+  </script>
+  
+  <nav class="fixed bottom-0 left-1/2 w-full max-w-5xl -translate-x-1/2 transform">
+	<div class="bg-gray-100 p-3">
+	  <div class="flex items-center justify-around">
+		{#each navItems as item}
+		  {@const Icon = item.icon}
+		  <button
+			class="group relative flex items-center justify-center rounded-xl p-4 transition-all duration-200 ease-in-out"
+			class:active={$currentPage === item.value}
+			onclick={() => handleNavigation(item.value)}
+			aria-label={item.value}
+		  >
+			<div class="transform transition-transform group-hover:scale-110">
+			  <Icon size={28} weight={$currentPage === item.value ? 'fill' : 'regular'} />
+			</div>
+		  </button>
+		{/each}
+	  </div>
 	</div>
-</nav>
+  </nav>
+  
+  <style lang="postcss">
+	button {
+	  color: #718096;
+	  padding: 0.75rem;
+	}
+  
+	button:hover {
+	  color: #4a5568;
+	}
+  
+	button.active {
+	  color: #e53e3e;
+	  box-shadow:
+		inset 4px 4px 12px #c5c5c5,
+		inset -4px -4px 12px #ffffff;
+	}
+  
+	@media (min-width: 1024px) {
+	  button {
+		padding: 1rem;
+	  }
+	}
+  </style>

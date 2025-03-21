@@ -7,13 +7,17 @@
   import PostActions from './feed/post-actions.svelte';
   import PostContent from './feed/post-content.svelte';
 
-  export let item: FeedItem;  // Expect item to be a FeedItem object
+  // Use $props() to declare and access props
+  let { item } = $props<{ item: FeedItem }>();
 
-  $: timeAgo = formatDistanceToNow(item.timestamp, { addSuffix: true });
-  let isExpanded = false;
+  // Use $derived for reactive computations
+  let timeAgo = $derived(formatDistanceToNow(item.timestamp, { addSuffix: true }));
+
+  // Use $state for reactive state
+  let isExpanded = $state(false);
 
   // Function to handle the vote update
-  function handleVote(increment: number) {
+  function handleVote(increment: number): void {
     item.votes += increment;  // Update the votes directly in the item
     toast.push(increment > 0 ? 'Upvoted!' : 'Downvoted!', {
       theme: {
@@ -23,13 +27,20 @@
     });
   }
 
-  function handleShare() {
+  // Function to handle sharing
+  function handleShare(): void {
     toast.push('Link copied to clipboard!', {
       theme: {
         '--toastBackground': '#4F46E5',
         '--toastColor': 'white',
       }
     });
+  }
+
+  // Function to handle commenting
+  function handleComment(): void {
+    // Add your comment handling logic here
+    console.log('Comment button clicked');
   }
 </script>
 
@@ -44,6 +55,7 @@
     </div>
   </div>
 
+  <!-- Use bind:isExpanded with the bindable prop -->
   <PostContent 
     id={item.id} 
     content={item.content} 
@@ -52,7 +64,13 @@
 
   <div class="flex justify-between items-center px-4 py-3 border-t border-gray-100">
     <!-- Pass votes to VoteButtons component and listen for 'vote' event -->
-    <VoteButtons votes={item.votes} on:vote={(event) => handleVote(event.detail)} />
-    <PostActions on:share={handleShare} />
+    <VoteButtons 
+      votes={item.votes} 
+      onVote={(increment: number) => handleVote(increment)} 
+    />
+    <PostActions 
+      onshare={handleShare} 
+      oncomment={handleComment} 
+    />
   </div>
 </article>

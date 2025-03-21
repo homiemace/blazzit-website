@@ -1,6 +1,7 @@
 <script lang="ts">
-	import '../app.css';
+	import '../app.css'; // Ensure that this imports your Tailwind CSS file
 	let { children } = $props();
-</script>
-
-{@render children()}
+  </script>
+  
+  {@render children()}
+  

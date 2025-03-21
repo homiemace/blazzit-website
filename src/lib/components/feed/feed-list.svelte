@@ -1,91 +1,94 @@
 <script lang="ts">
-  import { feedStore, vote } from '$lib/stores/feed';  // Import vote function
-  import { user } from '$lib/stores/user';
-  import VoteButtons from '$lib/components/feed/vote-buttons.svelte';  // Correctly import VoteButtons
-  import PostContent from '$lib/components/feed/post-content.svelte';  // Ensure correct import
-  import PostActions from '$lib/components/feed/post-actions.svelte';
+  import { fade } from 'svelte/transition';
   import { formatDistanceToNow } from 'date-fns';
-  import { Trophy } from 'phosphor-svelte';
+  import type { FeedItem } from '$lib/types';
+  import VoteButtons from './vote-buttons.svelte';
+  import PostActions from './post-actions.svelte';
+  import PostContent from './post-content.svelte';
+  import { feedStore, comment } from '$lib/stores/feed'; // Removed vote
 
-  let expandedPost: number | null = null;
+  // Use $props() to declare and access props
+  let { onVote } = $props<{
+    onVote: (id: number, increment: number) => void; // Only onVote is passed as a prop
+  }>();
 
-  function handleVote(postId: number, increment: number) {
-    // Call the 'vote' function from the store to update the votes
-    vote(postId, increment);
-  }
+  // Use $state for reactive state
+  let isExpanded = $state(false);
+  let newComment = $state(''); // State for the new comment input
 
-  function toggleExpand(id: number) {
-    expandedPost = expandedPost === id ? null : id;
-  }
-
-  function handleComment(id: number) {
-    feedStore.update(posts =>
-      posts.map(post =>
-        post.id === id ? { ...post, comments: post.comments + 1 } : post
-      )
-    );
-    user.addExperience(2); // Add 2 XP for commenting
-  }
-
-  function handleShare(id: number) {
-    feedStore.update(posts =>
-      posts.map(post =>
-        post.id === id ? { ...post, shares: post.shares + 1 } : post
-      )
-    );
-    user.addExperience(5); // Add 5 XP for sharing
+  // Function to handle adding a comment
+  function handleAddComment(item: FeedItem): void {
+    if (newComment.trim() === '') return; // Don't add empty comments
+    comment(item.id, newComment); // Use the store action
+    newComment = ''; // Clear the input
   }
 </script>
 
-<div class="space-y-4">
-  {#each $feedStore as post (post.id)}
-    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div class="p-4">
-        <div class="flex items-center justify-between mb-2">
-          <div class="flex items-center space-x-2">
-            <img src="https://i.pravatar.cc/40?u={post.id}" alt="User avatar" class="w-10 h-10 rounded-full" />
-            <div>
-              <h3 class="font-semibold">{post.author}</h3>
-              <p class="text-xs text-gray-500">{formatDistanceToNow(post.timestamp)} ago</p>
-            </div>
-          </div>
-          <div class="flex items-center space-x-1 text-yellow-500">
-            <Trophy size={16} weight="fill" />
-            <span class="text-xs font-medium">+{post.xpReward} XP</span>
-          </div>
-        </div>
-        
-        <!-- Pass the individual properties to PostContent -->
-        <PostContent 
-          id={post.id} 
-          content={post.content} 
-          isExpanded={expandedPost === post.id} 
-        />
-        
-        <button 
-          class="text-sm text-gray-500 mt-2 hover:text-gray-700"
-          on:click={() => toggleExpand(post.id)}
-        >
-          {expandedPost === post.id ? 'Show less' : 'Show more'}
-        </button>
+{#each $feedStore as item}
+  <article in:fade={{ duration: 300 }} class="bg-white rounded-xl shadow-sm overflow-hidden mb-4">
+    <div class="flex items-center space-x-3 p-4">
+      <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+        {item.id}
       </div>
-      
-      <div class="border-t border-gray-100 px-4 py-2 flex justify-between items-center">
-        <!-- Pass only the votes to VoteButtons component -->
-        <VoteButtons 
-          votes={post.votes} 
-          on:vote={(event) => handleVote(post.id, event.detail)} />
-        <PostActions 
-          on:comment={() => handleComment(post.id)}
-          on:share={() => handleShare(post.id)}
-        />
-      </div>
-      
-      <div class="bg-gray-50 px-4 py-2 text-sm text-gray-500">
-        <span>{post.comments} comments</span>
-        <span class="mx-2">•</span>
-        <span>{post.shares} shares</span>
+      <div>
+        <p class="font-medium text-gray-800">{item.author}</p>
+        <p class="text-xs text-gray-500">
+          {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+        </p>
       </div>
     </div>
-  {/each}
-</div>
+
+    <!-- Use bind:isExpanded with the bindable prop -->
+    <PostContent 
+      id={item.id} 
+      content={item.content} 
+      bind:isExpanded 
+    />
+
+    <!-- Comment Input -->
+    <div class="px-4 py-3 border-t border-gray-100">
+      <textarea
+        bind:value={newComment}
+        placeholder="Write a comment..."
+        class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      ></textarea>
+      <button
+        onclick={() => handleAddComment(item)}
+        class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+      >
+        Add Comment
+      </button>
+    </div>
+
+    <!-- Comments List -->
+    <div class="px-4 py-3 border-t border-gray-100">
+      {#each item.comments as comment}
+        <div class="mb-4">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-bold">
+              {comment.author.charAt(0)}
+            </div>
+            <div>
+              <p class="font-medium text-gray-800">{comment.author}</p>
+              <p class="text-xs text-gray-500">
+                {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+              </p>
+            </div>
+          </div>
+          <p class="mt-2 text-gray-700">{comment.content}</p>
+        </div>
+      {/each}
+    </div>
+
+    <div class="flex justify-between items-center px-4 py-3 border-t border-gray-100">
+      <VoteButtons 
+        votes={item.votes} 
+        onVote={(increment: number) => onVote(item.id, increment)}
+      />
+      <PostActions 
+        onshare={() => console.log('Shared!')} 
+        oncomment={() => console.log('Comment button clicked')} 
+      />
+    </div>
+  </article>
+{/each}

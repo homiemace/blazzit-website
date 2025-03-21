@@ -1,20 +1,25 @@
 <script lang="ts">
-  import { ChatDots, Share } from 'phosphor-svelte';
-  import { createEventDispatcher } from 'svelte';
+  import ChatDots from 'phosphor-svelte/lib/ChatDots';
+  import Share from 'phosphor-svelte/lib/Share';
 
-  const dispatch = createEventDispatcher();
+  let { onshare, oncomment } = $props<{
+    onshare: () => void;
+    oncomment: () => void;
+  }>();
 </script>
 
 <div class="flex space-x-4">
   <button 
     class="text-gray-500 hover:text-blue-500 transition-colors"
-    on:click={() => dispatch('comment')}
+    onclick={oncomment}
+    aria-label="Comment"
   >
     <ChatDots size={20} />
   </button>
   <button 
     class="text-gray-500 hover:text-blue-500 transition-colors"
-    on:click={() => dispatch('share')}
+    onclick={onshare} 
+    aria-label="Share"
   >
     <Share size={20} />
   </button>

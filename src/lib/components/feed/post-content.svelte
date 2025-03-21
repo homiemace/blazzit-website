@@ -1,9 +1,12 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
-  
-  export let id: number;
-  export let isExpanded = false;
-  export let content: string;
+
+  // Use $props() to declare and access props
+  let { id, isExpanded = $bindable(false), content } = $props<{
+    id: number;
+    isExpanded?: boolean;
+    content: string;
+  }>();
 </script>
 
 <div class="relative">
